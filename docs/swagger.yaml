@@ -1,0 +1,180 @@
+definitions:
+  models.ErrorResponse:
+    properties:
+      error:
+        example: Invalid message format
+        type: string
+      message:
+        example: The provided message could not be parsed
+        type: string
+    type: object
+  models.HealthResponse:
+    properties:
+      service:
+        example: rockets
+        type: string
+      status:
+        example: ok
+        type: string
+    type: object
+  models.MessageMetadata:
+    properties:
+      channel:
+        example: 193270a9-c9cf-404a-8f83-838e71d9ae67
+        type: string
+      messageNumber:
+        example: 1
+        type: integer
+      messageTime:
+        example: "2022-02-02T19:39:05.86337+01:00"
+        type: string
+      messageType:
+        example: RocketLaunched
+        type: string
+    type: object
+  models.Rocket:
+    properties:
+      explosionReason:
+        example: PRESSURE_VESSEL_FAILURE
+        type: string
+      id:
+        example: 193270a9-c9cf-404a-8f83-838e71d9ae67
+        type: string
+      lastMessageNumber:
+        example: 42
+        type: integer
+      lastUpdated:
+        example: "2022-02-02T19:39:05.86337+01:00"
+        type: string
+      mission:
+        example: ARTEMIS
+        type: string
+      speed:
+        example: 3500
+        type: integer
+      status:
+        allOf:
+        - $ref: '#/definitions/models.RocketStatus'
+        example: ACTIVE
+      type:
+        example: Falcon-9
+        type: string
+    type: object
+  models.RocketMessage:
+    properties:
+      message: {}
+      metadata:
+        $ref: '#/definitions/models.MessageMetadata'
+    type: object
+  models.RocketStatus:
+    enum:
+    - ACTIVE
+    - EXPLODED
+    type: string
+    x-enum-varnames:
+    - StatusActive
+    - StatusExploded
+info:
+  contact: {}
+  description: REST API for rocket system with message processing
+  title: Rockets API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: Returns the health status of the service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.HealthResponse'
+      summary: Health check
+      tags:
+      - health
+  /messages:
+    post:
+      consumes:
+      - application/json
+      description: Accepts rocket telemetry messages from the test program and publishes
+        them asynchronously
+      parameters:
+      - description: Rocket message
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/models.RocketMessage'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Receive rocket telemetry message
+      tags:
+      - messages
+  /rockets:
+    get:
+      description: Retrieves a list of all rockets in the system with optional sorting
+      parameters:
+      - default: id
+        description: Sort by field (type, speed, mission, status)
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: List all rockets
+      tags:
+      - rockets
+  /rockets/{id}:
+    get:
+      description: Retrieves the current state of a specific rocket
+      parameters:
+      - description: Rocket ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Rocket'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get rocket by ID
+      tags:
+      - rockets
+swagger: "2.0"
