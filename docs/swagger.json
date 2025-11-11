@@ -1,0 +1,270 @@
+{
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "REST API for rocket telemetry system with async message processing via pub/sub channels",
+        "title": "Rockets API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "email": "support@rockets.example.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8088",
+    "basePath": "/",
+    "paths": {
+        "/health": {
+            "get": {
+                "description": "Returns the health status of the service",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages": {
+            "post": {
+                "description": "Accepts rocket telemetry messages from the test program and publishes them asynchronously",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "messages"
+                ],
+                "summary": "Receive rocket telemetry message",
+                "parameters": [
+                    {
+                        "description": "Rocket message",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RocketMessage"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/rockets": {
+            "get": {
+                "description": "Retrieves a list of all rockets in the system with optional sorting",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rockets"
+                ],
+                "summary": "List all rockets",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "id",
+                        "description": "Sort by field (type, speed, mission, status)",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Rocket"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rockets/{id}": {
+            "get": {
+                "description": "Retrieves the current state of a specific rocket",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rockets"
+                ],
+                "summary": "Get rocket by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Rocket ID (channel)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Rocket"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Invalid message format"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "The provided message could not be parsed"
+                }
+            }
+        },
+        "models.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "service": {
+                    "type": "string",
+                    "example": "rockets"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                }
+            }
+        },
+        "models.MessageMetadata": {
+            "type": "object",
+            "properties": {
+                "channel": {
+                    "type": "string",
+                    "example": "193270a9-c9cf-404a-8f83-838e71d9ae67"
+                },
+                "messageNumber": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "messageTime": {
+                    "type": "string",
+                    "example": "2022-02-02T19:39:05.86337+01:00"
+                },
+                "messageType": {
+                    "type": "string",
+                    "example": "RocketLaunched"
+                }
+            }
+        },
+        "models.Rocket": {
+            "type": "object",
+            "properties": {
+                "explosionReason": {
+                    "type": "string",
+                    "example": "PRESSURE_VESSEL_FAILURE"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "193270a9-c9cf-404a-8f83-838e71d9ae67"
+                },
+                "lastMessageNumber": {
+                    "type": "integer",
+                    "example": 42
+                },
+                "lastUpdated": {
+                    "type": "string",
+                    "example": "2022-02-02T19:39:05.86337+01:00"
+                },
+                "mission": {
+                    "type": "string",
+                    "example": "ARTEMIS"
+                },
+                "speed": {
+                    "type": "integer",
+                    "example": 3500
+                },
+                "status": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.RocketStatus"
+                        }
+                    ],
+                    "example": "ACTIVE"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "Falcon-9"
+                }
+            }
+        },
+        "models.RocketMessage": {
+            "type": "object",
+            "properties": {
+                "message": {},
+                "metadata": {
+                    "$ref": "#/definitions/models.MessageMetadata"
+                }
+            }
+        },
+        "models.RocketStatus": {
+            "type": "string",
+            "enum": [
+                "ACTIVE",
+                "EXPLODED"
+            ],
+            "x-enum-varnames": [
+                "StatusActive",
+                "StatusExploded"
+            ]
+        }
+    }
+}
