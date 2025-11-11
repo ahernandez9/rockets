@@ -1,6 +1,7 @@
 package inmemory
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"sync"
@@ -22,7 +23,7 @@ func NewInMemoryRepository() *RocketRepository {
 }
 
 // Save stores or updates a rocket
-func (r *RocketRepository) Save(rocket *models.Rocket) error {
+func (r *RocketRepository) Save(ctx context.Context, rocket *models.Rocket) error {
 	if rocket == nil {
 		return fmt.Errorf("cannot save nil rocket")
 	}
@@ -35,7 +36,7 @@ func (r *RocketRepository) Save(rocket *models.Rocket) error {
 }
 
 // FindByID retrieves a rocket by ID
-func (r *RocketRepository) FindByID(id string) (*models.Rocket, error) {
+func (r *RocketRepository) FindByID(ctx context.Context, id string) (*models.Rocket, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -50,7 +51,7 @@ func (r *RocketRepository) FindByID(id string) (*models.Rocket, error) {
 }
 
 // FindAll retrieves all rockets
-func (r *RocketRepository) FindAll() []*models.Rocket {
+func (r *RocketRepository) FindAll(ctx context.Context) []*models.Rocket {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -69,7 +70,7 @@ func (r *RocketRepository) FindAll() []*models.Rocket {
 }
 
 // GetCount returns the total number of rockets
-func (r *RocketRepository) GetCount() int {
+func (r *RocketRepository) GetCount(ctx context.Context) int {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return len(r.rockets)

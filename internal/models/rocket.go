@@ -23,14 +23,9 @@ type RocketLaunchedMessage struct {
 	Mission     string `json:"mission" example:"ARTEMIS"`
 }
 
-// RocketSpeedIncreasedMessage represents a speed increase event
-type RocketSpeedIncreasedMessage struct {
-	By int `json:"by" example:"3000"`
-}
-
-// RocketSpeedDecreasedMessage represents a speed decrease event
-type RocketSpeedDecreasedMessage struct {
-	By int `json:"by" example:"2500"`
+// RocketSpeedChangedMessage represents a speed change event (increase or decrease)
+type RocketSpeedChangedMessage struct {
+	By int `json:"by" example:"3000"` // Always positive; message type determines if added or subtracted
 }
 
 // RocketExplodedMessage represents a rocket explosion event
