@@ -1,0 +1,11 @@
+{
+  "id": "193270a9-c9cf-404a-8f83-838e71d9ae67",
+  "type": "Falcon-9",
+  "speed": 0,
+  "mission": "FAILED_MISSION",
+  "status": "EXPLODED",
+  "explosionReason": "PRESSURE_VESSEL_FAILURE",
+  "lastMessageNumber": 0,
+  "lastUpdated": "0001-01-01T00:00:00Z"
+}
+

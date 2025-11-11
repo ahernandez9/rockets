@@ -9,6 +9,8 @@ import (
 // MessageHandler processes received messages (callback function)
 type MessageHandler func(ctx context.Context, msg *models.RocketMessage) error
 
+//go:generate go run go.uber.org/mock/mockgen -source=pubsub.go -destination=mocks/mock_pubsub.go -package=mocks
+
 // Publisher defines the interface for publishing messages
 type Publisher interface {
 	Publish(ctx context.Context, msg *models.RocketMessage) error

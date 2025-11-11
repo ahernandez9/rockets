@@ -1,4 +1,4 @@
-.PHONY: help build run clean lint swagger test install-tools
+.PHONY: help build run clean lint swagger test install-tools generate-mocks
 
 help: ## Display this help message
 	@echo "Available targets:"
@@ -9,6 +9,12 @@ install-tools: ## Install required development tools (optional - tools run via '
 	@echo "If you prefer to install them globally:"
 	@echo "  go install github.com/swaggo/swag/cmd/swag@latest"
 	@echo "  go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
+	@echo "  go install go.uber.org/mock/mockgen@latest  # Note: We use go.uber.org/mock (not github.com/golang/mock)"
+
+generate-mocks: ## Generate mock implementations for all interfaces
+	@echo "Generating mocks..."
+	@go generate ./...
+	@echo "Mocks generated successfully!"
 
 swagger: ## Generate swagger documentation
 	@echo "Generating swagger docs..."
@@ -39,8 +45,4 @@ deps: ## Download dependencies
 	@go mod download
 	@go mod tidy
 	@echo "Dependencies updated!"
-
-dev: swagger ## Run in development mode
-	@echo "Starting server in development mode..."
-	@go run cmd/server/main.go
 

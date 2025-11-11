@@ -11,8 +11,16 @@ import (
 	"github.com/ahernandez9/rockets/internal/repository"
 )
 
-// MessageService handles async message processing via pub/sub
-type MessageService struct {
+//go:generate go run go.uber.org/mock/mockgen -source=message.go -destination=mocks/mock_message_service.go -package=mocks
+
+type MessageService interface {
+	Start()
+	Stop()
+	PublishMessage(msg *models.RocketMessage) error
+}
+
+// messageService handles async message processing via pub/sub
+type messageService struct {
 	pubsub pubsub.Interface
 	repo   repository.RocketRepository
 	ctx    context.Context
@@ -20,10 +28,10 @@ type MessageService struct {
 }
 
 // NewMessageService creates a new message service
-func NewMessageService(ps pubsub.Interface, r repository.RocketRepository) *MessageService {
+func NewMessageService(ps pubsub.Interface, r repository.RocketRepository) MessageService {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	return &MessageService{
+	return &messageService{
 		pubsub: ps,
 		repo:   r,
 		ctx:    ctx,
@@ -32,7 +40,7 @@ func NewMessageService(ps pubsub.Interface, r repository.RocketRepository) *Mess
 }
 
 // Start begins processing messages
-func (s *MessageService) Start() {
+func (s *messageService) Start() {
 	log.Println("MessageService: Started message processor")
 
 	if err := s.pubsub.Subscribe(s.ctx, s.handleMessage); err != nil {
@@ -43,19 +51,20 @@ func (s *MessageService) Start() {
 }
 
 // Stop gracefully stops the message service
-func (s *MessageService) Stop() {
+func (s *messageService) Stop() {
 	log.Println("MessageService: Stopping")
 	s.cancel()
 	s.pubsub.Close()
 }
 
 // PublishMessage publishes a message for async processing
-func (s *MessageService) PublishMessage(msg *models.RocketMessage) error {
+func (s *messageService) PublishMessage(msg *models.RocketMessage) error {
 	return s.pubsub.Publish(s.ctx, msg)
 }
 
 // handleMessage processes a single message (callback from subscriber)
-func (s *MessageService) handleMessage(ctx context.Context, msg *models.RocketMessage) error {
+// In a production scenario, would implement retry logic with exponential backoff for consistency
+func (s *messageService) handleMessage(ctx context.Context, msg *models.RocketMessage) error {
 	channelID := msg.Metadata.Channel
 
 	existingRocket, _ := s.repo.FindByID(ctx, channelID)
@@ -67,7 +76,6 @@ func (s *MessageService) handleMessage(ctx context.Context, msg *models.RocketMe
 		return nil
 	}
 
-	// Process based on message type
 	switch msg.Metadata.MessageType {
 	case "RocketLaunched":
 		return s.handleRocketLaunched(ctx, channelID, msg)
@@ -106,7 +114,7 @@ func updateRocketMetadata(rocket *models.Rocket, msg *models.RocketMessage) {
 	rocket.LastUpdated = msg.Metadata.MessageTime
 }
 
-func (s *MessageService) handleRocketLaunched(ctx context.Context, channelID string, msg *models.RocketMessage) error {
+func (s *messageService) handleRocketLaunched(ctx context.Context, channelID string, msg *models.RocketMessage) error {
 	launchMsg, err := parseMessage[models.RocketLaunchedMessage](msg)
 	if err != nil {
 		return err
@@ -127,7 +135,7 @@ func (s *MessageService) handleRocketLaunched(ctx context.Context, channelID str
 	return s.repo.Save(ctx, rocket)
 }
 
-func (s *MessageService) handleRocketSpeedChanged(ctx context.Context, channelID string, msg *models.RocketMessage) error {
+func (s *messageService) handleRocketSpeedChanged(ctx context.Context, channelID string, msg *models.RocketMessage) error {
 	rocket, err := s.repo.FindByID(ctx, channelID)
 	if err != nil {
 		return fmt.Errorf("rocket not found: %s", channelID)
@@ -152,7 +160,7 @@ func (s *MessageService) handleRocketSpeedChanged(ctx context.Context, channelID
 	return s.repo.Save(ctx, rocket)
 }
 
-func (s *MessageService) handleRocketExploded(ctx context.Context, channelID string, msg *models.RocketMessage) error {
+func (s *messageService) handleRocketExploded(ctx context.Context, channelID string, msg *models.RocketMessage) error {
 	rocket, err := s.repo.FindByID(ctx, channelID)
 	if err != nil {
 		return fmt.Errorf("rocket not found: %s", channelID)
@@ -173,7 +181,7 @@ func (s *MessageService) handleRocketExploded(ctx context.Context, channelID str
 	return s.repo.Save(ctx, rocket)
 }
 
-func (s *MessageService) handleRocketMissionChanged(ctx context.Context, channelID string, msg *models.RocketMessage) error {
+func (s *messageService) handleRocketMissionChanged(ctx context.Context, channelID string, msg *models.RocketMessage) error {
 	rocket, err := s.repo.FindByID(ctx, channelID)
 	if err != nil {
 		return fmt.Errorf("rocket not found: %s", channelID)

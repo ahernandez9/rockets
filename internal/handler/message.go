@@ -20,7 +20,7 @@ import (
 // @Failure 400 {object} models.ErrorResponse
 // @Failure 500 {object} models.ErrorResponse
 // @Router /messages [post]
-func PostMessage(ms *service.MessageService) gin.HandlerFunc {
+func PostMessage(ms service.MessageService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var msg models.RocketMessage
 
@@ -56,9 +56,8 @@ func PostMessage(ms *service.MessageService) gin.HandlerFunc {
 			return
 		}
 
-		// Return immediately while message is processed in background
 		c.JSON(http.StatusAccepted, gin.H{
-			"status":  "accepted",
+			"status":  "ok",
 			"message": "Message queued for processing",
 		})
 	}

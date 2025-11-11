@@ -1,0 +1,5 @@
+{
+  "error": "Invalid rocket ID",
+  "message": "The rocket ID must be a valid UUID (e.g., 193270a9-c9cf-404a-8f83-838e71d9ae67)"
+}
+
