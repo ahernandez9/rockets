@@ -110,6 +110,8 @@ Why this pattern:
 
 The trade-off is messages can be lost if the service crashes between accepting and processing them. The channel buffer is also limited to 1000 messages - if processing slows down and it fills up, new messages get rejected.
 
+![img_3.png](img_3.png)
+
 **In-Memory Storage**
 
 Everything lives in memory with a mutex-protected map. Fast and simple for a demo, but obviously all data disappears on restart. Also means you can't run multiple instances.
@@ -129,13 +131,16 @@ Included a test suite for the `GetRocket` handler to show the testing approach -
 ### What's Missing for Production
 
 The big ones:
-- **Database**: Swap in PostgreSQL instead of in-memory storage
+- **Database**: Swap in PostgreSQL instead of in-memory storage (atomic transactions ensure consistency)
 - **Real queue**: Use Redis Streams or RabbitMQ instead of Go channels (with persistence and horizontal scaling)
 - **Observability**: Structured logging, metrics, distributed tracing
 - **Tests**: Full test coverage, integration tests, load testing
 
+![img_1.png](img_1.png)
+
 This was built for a 6-hour scope - enough to show the architecture and patterns, but you'd need these pieces before going live.
 
+This architecture is designed to provide the data for a metrics dashboard where consistency is not a must, not a mission-critical system where it is. **If it were the case, we would swap the architecture to a synchronous processing model with strong consistency guarantees**.
 ### Architecture Overview
 
 The flow is: HTTP request comes in, handler validates it and publishes to channel, background goroutine picks it up, processes it according to the message type, updates the repository. Query endpoints read directly from the repository.
