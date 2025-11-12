@@ -1,0 +1,5 @@
+{
+  "error": "Rocket not found",
+  "message": "No rocket exists with the provided ID. It may not have been launched yet."
+}
+

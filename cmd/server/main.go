@@ -27,7 +27,7 @@ func main() {
 
 	// Dependencies
 	repo := inmemory.NewInMemoryRepository()
-	pubsub := channel.NewPubSub(100)
+	pubsub := channel.NewPubSub(1000)
 
 	// Services
 	rocketService := service.NewRocketService(repo)

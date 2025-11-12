@@ -20,11 +20,10 @@ import (
 // @Failure 400 {object} models.ErrorResponse
 // @Failure 404 {object} models.ErrorResponse
 // @Router /rockets/{id} [get]
-func GetRocket(rs *service.RocketService) gin.HandlerFunc {
+func GetRocket(rs service.RocketService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
-		// Validate UUID format
 		if _, err := uuid.Parse(id); err != nil {
 			c.JSON(http.StatusBadRequest, models.ErrorResponse{
 				Error:   "Invalid rocket ID",
@@ -55,7 +54,7 @@ func GetRocket(rs *service.RocketService) gin.HandlerFunc {
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} models.ErrorResponse
 // @Router /rockets [get]
-func ListRockets(rs *service.RocketService) gin.HandlerFunc {
+func ListRockets(rs service.RocketService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		sortBy := c.DefaultQuery("sort", "id")
 

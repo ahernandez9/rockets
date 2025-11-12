@@ -1,0 +1,10 @@
+{
+  "id": "193270a9-c9cf-404a-8f83-838e71d9ae67",
+  "type": "Falcon-9",
+  "speed": 5000,
+  "mission": "ARTEMIS",
+  "status": "ACTIVE",
+  "lastMessageNumber": 0,
+  "lastUpdated": "0001-01-01T00:00:00Z"
+}
+
